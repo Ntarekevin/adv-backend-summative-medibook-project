@@ -2,6 +2,7 @@ const pool = require('../config/db');
 const Appointment = require('../models/appointmentModel');
 const { calculateRefund } = require('../services/refundService');
 const audit = require('../services/auditLogger');
+const queue = require('../services/queueService');
 const { NotFoundError, UnprocessableError } = require('../utils/errors');
 
 async function cancel(req, res, next) {
@@ -24,6 +25,16 @@ async function cancel(req, res, next) {
         appointment_id: Number(id),
         refund_amount: refund,
       });
+
+      try {
+        await queue.pushNotification({
+          type: 'slot_freed',
+          doctor_id: row.doctor_id,
+          appt_datetime: row.appt_datetime,
+        });
+      } catch (error) {
+        console.error('Notification queue error:', error.message);
+      }
 
       res.json({ appointment_id: Number(id), refund_amount: refund, status: 'cancelled' });
     } catch (e) {

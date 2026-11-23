@@ -6,6 +6,7 @@ const {
   parseAppointmentDate, validateBookingSlot, MAX_PER_DAY,
 } = require('../services/validationService');
 const audit = require('../services/auditLogger');
+const queue = require('../services/queueService');
 const { acquireDoctorDayLock } = require('../services/bookingLock');
 const {
   ValidationError, NotFoundError, ConflictError,
@@ -76,6 +77,16 @@ async function book(req, res, next) {
       }
 
       if (conflictMessage) {
+        try {
+          await queue.pushWaitlist({
+            patient_id,
+            doctor_id,
+            appt_datetime: apptDateTime,
+          });
+        } catch (error) {
+          console.error('Waitlist queue error:', error.message);
+        }
+
         throw new ConflictError(conflictMessage);
       }
 
@@ -88,6 +99,16 @@ async function book(req, res, next) {
         doctor_id,
         appt_datetime: apptDateTime,
       });
+
+      try {
+        await queue.pushNotification({
+          type: 'booking_confirmation',
+          appointment_id: id,
+          patient_email: patient.email,
+        });
+      } catch (error) {
+        console.error('Notification queue error:', error.message);
+      }
 
       res.status(201).json(row);
     } catch (e) {
