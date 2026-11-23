@@ -1,6 +1,7 @@
 const pool = require('../config/db');
 const Appointment = require('../models/appointmentModel');
 const { calculateRefund } = require('../services/refundService');
+const audit = require('../services/auditLogger');
 const { NotFoundError, UnprocessableError } = require('../utils/errors');
 
 async function cancel(req, res, next) {
@@ -17,6 +18,12 @@ async function cancel(req, res, next) {
       const ok = await Appointment.markCancelled(id, refund, conn);
       if (!ok) throw new UnprocessableError('Unable to cancel');
       await conn.commit();
+
+      await audit.log({
+        event: 'cancellation',
+        appointment_id: Number(id),
+        refund_amount: refund,
+      });
 
       res.json({ appointment_id: Number(id), refund_amount: refund, status: 'cancelled' });
     } catch (e) {

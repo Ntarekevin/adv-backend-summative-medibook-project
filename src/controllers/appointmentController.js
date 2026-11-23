@@ -5,6 +5,7 @@ const Doctor = require('../models/doctorModel');
 const {
   parseAppointmentDate, validateBookingSlot, MAX_PER_DAY,
 } = require('../services/validationService');
+const audit = require('../services/auditLogger');
 const { acquireDoctorDayLock } = require('../services/bookingLock');
 const {
   ValidationError, NotFoundError, ConflictError,
@@ -79,6 +80,15 @@ async function book(req, res, next) {
       }
 
       const row = await Appointment.findById(id);
+
+      await audit.log({
+        event: 'booking',
+        appointment_id: id,
+        patient_id,
+        doctor_id,
+        appt_datetime: apptDateTime,
+      });
+
       res.status(201).json(row);
     } catch (e) {
       // map unique-constraint race to 409
