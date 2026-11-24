@@ -42,4 +42,4 @@ When a slot or the daily cap is full, the request is added to a Redis waitlist. 
 
 ## Video Walkthrough
 
-[Add your YouTube / Drive link here]
+[]([urhttps://youtu.be/MYS__h98gvAl)
