@@ -41,5 +41,4 @@ Audit entries use `fs.promises.appendFile` and the log directory is created auto
 When a slot or the daily cap is full, the request is added to a Redis waitlist. On cancellation, the worker looks for a matching doctor and slot and attempts promotion. A failed promotion is re-queued so the patient is not lost.
 
 ## Video Walkthrough
-
-[]([urhttps://youtu.be/MYS__h98gvAl)
+https://youtu.be/MYS__h98gvAl
