@@ -1,4 +1,4 @@
-# MediBook — Clinic Appointment System
+# MediBook  Clinic Appointment System
 
 ## Setup
 
@@ -8,7 +8,7 @@
 3. **Env**: `cp .env.example .env` and fill values
 4. `npm install`
 5. `npm start` (API) — separate terminal `npm run worker` (background worker)
-6. `npm test` (unit tests — no DB/Redis needed)
+6. `npm test` (unit tests  no DB/Redis needed)
 
 ## API
 
@@ -26,17 +26,17 @@
 
 ## Design Justifications
 
-### Justification — Part C (Booking & Cancellation)
+### Justification  Part C (Booking & Cancellation)
 
 Bookings acquire a MySQL named lock for the doctor and date before checking daily capacity and slot availability. The lock is held through commit or rollback, while `UNIQUE(doctor_id, active_slot)` provides a database-level last line of defense. `active_slot` is generated from `appt_datetime` only when `status = 'booked'`, so cancelled appointments do not prevent rebooking.
 
 Refunds are computed server-side in `refundService.calculateRefund`: more than 48 hours gives 100%, 24–48 hours gives 50%, and less than 24 hours gives 0%. Cancellation and the refund amount are committed in the same transaction.
 
-### Justification — Part D (Audit Log)
+### Justification  Part D (Audit Log)
 
 Audit entries use `fs.promises.appendFile` and the log directory is created automatically. Logging failures are reported without failing the user's request.
 
-### Justification — Part E (Queues & Redis)
+### Justification  Part E (Queues & Redis)
 
 When a slot or the daily cap is full, the request is added to a Redis waitlist. On cancellation, the worker looks for a matching doctor and slot and attempts promotion. A failed promotion is re-queued so the patient is not lost.
 
